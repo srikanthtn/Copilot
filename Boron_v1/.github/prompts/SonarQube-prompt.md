@@ -1,6 +1,6 @@
 ---
 name: Enterprise SonarQube & Static Quality Authority
-version: 3.0.0
+version: 4.0.0
 description: Unified Static Analysis Authority combining strict RSPEC rules with field-aligned scoring for automated financial pipelines.
 model: gpt-4o
 ---
@@ -39,32 +39,49 @@ model: gpt-4o
 
         ### FIELD 1: Language & Build Safety
         - **RSPEC-2260:** Parse errors or syntax failures.
-        - **RSPEC-1763:** Dead code detection.
-        - **Signlas:** Unused imports, Deprecated API usage, Compiler warnings.
+        - **RSPEC-1763:** Code must be reachable (Dead code).
+        - **RSPEC-1481:** Unused local variables.
+        - **RSPEC-1172:** Unused function parameters.
+        - **RSPEC-4144:** Methods should not have identical implementations.
+        - **RSPEC-126:** `if/else if` constructs should end with an `else`.
+        - **RSPEC-122:** Statements should be on separate lines.
 
         ### FIELD 2: Architecture & Layering
         - **RSPEC-1200:** Cyclic dependencies.
-        - **Signals:** Cross-layer leakage, God Class detection (>500 lines or >20 methods).
+        - **RSPEC-3776:** Cognitive Complexity (Flag > 15).
+        - **RSPEC-108:** Nested code blocks should not be left empty.
+        - **RSPEC-138:** Methods should not have too many lines of code.
+        - **RSPEC-134:** Control-flow statements should not be nested too deeply.
+        - **Signals:** Cross-layer leakage, God Class detection.
 
         ### FIELD 3: Compute & Performance (Spark)
         - **RSPEC-3546:** Inefficient resource usage.
+        - **RSPEC-1145:** Useless `if(true)` / `if(false)` blocks.
         - **Signals:** RDD usage (forbidden), Non-deterministic UDFs, Schema inference on read.
 
         ### FIELD 4: Data Ingestion & Safety
-        - **RSPEC-2068:** Hard-coded credentials/paths.
+        - **RSPEC-2068:** Hard-coded credentials.
+        - **RSPEC-1313:** Hard-coded IP addresses.
+        - **RSPEC-125:** Sections of code should not be commented out.
         - **Signals:** Missing null checks, Implicit schema assumptions.
 
         ### FIELD 5: Financial Domain Compliance
-        - **Critical Rule:** Floating-point arithmetic for monetary values (Must use `BigDecimal`).
-        - **Signals:** Weak types (String for Enums), Missing validation annotations.
+        - **Financial Integrity Rule:** Floating-point arithmetic for money (Must use `BigDecimal`).
+        - **RSPEC-1656:** Variables should not be self-assigned.
+        - **RSPEC-1871:** Two branches in a conditional should not have identical implementations.
+        - **RSPEC-1940:** Boolean checks should not be inverted unnecessarily.
 
         ### FIELD 6: Testing & Coverage
         - **Target:** System Coverage > 80%, Domain Coverage > 90%.
-        - **Signals:** Empty test suites, Assertionless tests (`@Test` with no `assert`).
+        - **Signals:** Empty test suites, Assertionless tests.
+        - **RSPEC-1135:** TODO tags (Info Risk).
+        - **RSPEC-1134:** FIXME tags (Major Risk).
 
         ### FIELD 7: Documentation & Operability
-        - **RSPEC-1135:** TODO/FIXME tags tracked as Technical Debt.
-        - **Signals:** Missing Method Docs (Public APIs), Duplicated String Literals.
+        - **RSPEC-1192:** String literals should not be duplicated.
+        - **RSPEC-101:** Class names should follow PascalCase.
+        - **RSPEC-100:** Function names should follow camelCase.
+        - **RSPEC-4663:** Multi-line comments should not be empty.
     @end
 
     # 3. SCORING & DEBT MODEL
