@@ -121,6 +121,7 @@ FIELD 2: Architecture & Layering
 Static signals:
 - Cross-package dependency violations, cyclic dependencies
 - God classes, excessive coupling, layer leakage
+- Reference architecture contract violations (missing/renamed required role classes when a module is present)
 
 FIELD 3: Spark Correctness & Performance
 Static signals:
@@ -148,6 +149,134 @@ FIELD 7: Documentation & Operability
 Static signals:
 - Missing/outdated README
 - Inconsistent naming, lack of operational guidance
+@end
+
+@domain_reference_architecture_contract (GOVERNED)
+You MUST enforce the following reference architecture contracts as static expectations.
+
+Stability requirement:
+- These contracts are conditionally applicable.
+- Only enforce a contract group if there is static evidence the module exists in-repo (see applicability heuristics).
+- If there is no evidence the module exists, do NOT raise issues for that group.
+
+Applicability heuristics (static evidence):
+- Any Scala source file declaring one of the required class names below
+- OR package path hints (e.g., folders or packages containing: xct, ehv, btb, sepa, sctinbound, manual, order, account, limits, risk, balance, ledger, liquidity, treasury, orchestration, enrichment, regulatory, audit, streaming, event)
+- OR resources/docs that clearly declare the module as implemented in this repository
+
+When a contract group is applicable:
+- Missing a required class name is an Architecture & Layering issue.
+- A differently-named class that clearly implements the required role is a Naming issue (RSPEC-101) AND an Architecture & Layering issue; report only once under Architecture & Layering and mention the naming mismatch.
+- If a single class conflates multiple required roles (e.g., Processor + Validator + Settlement), flag as a God class/layer leakage under Architecture & Layering.
+
+Severity guidance for contract violations:
+- CRITICAL: Evidence of the module + secrets/PII compliance risk OR settlement/clearing execution conflated with validation OR circular dependency across layers.
+- MAJOR: Evidence of the module + one or more required role classes missing or collapsed into an unrelated layer.
+- MINOR: Evidence of the module + minor naming drift that does not create ambiguity (still recommend alignment).
+
+Contract groups (required class names)
+
+1) Payments Processing Families
+
+XCT
+- XctPaymentProcessor
+- XctTransactionHandler
+- XctClearingService
+- XctSettlementEngine
+
+EHV
+- EhvPaymentProcessor
+- EhvTransactionValidator
+- EhvClearingAdapter
+
+BTB
+- BtbPaymentProcessor
+- BtbTransferOrchestrator
+- BtbSettlementService
+
+SEPA
+- SepaPaymentProcessor
+- SepaClearingService
+- SepaSettlementEngine
+- SepaComplianceValidator
+
+SCT Inbound
+- SctInboundPaymentProcessor
+- SctInboundValidator
+- SctInboundClearingAdapter
+- SctInboundPostingService
+
+Manual Capture
+- ManualCapturePaymentHandler
+- ManualPaymentCaptureService
+- ManualPaymentValidator
+- ManualPaymentPostingService
+
+2) Order Management & Workflow
+- OrderBookService
+- OrderBookManager
+- OrderMatchingEngine
+- OrderLifecycleHandler
+- OrderExecutionService
+
+3) Account Management System (AMS)
+- AccountManagementService
+- AccountLifecycleManager
+- AccountOnboardingService
+- AccountStatusHandler
+- AccountClosureService
+
+Master & Reference Data
+- AccountMasterDataService
+- AccountReferenceDataProvider
+
+4) Limits, Risk & Controls
+- LimitUtilizationService
+- LimitCalculationEngine
+- LimitConsumptionTracker
+- LimitThresholdValidator
+
+Risk
+- RiskExposureCalculator
+- CreditLimitMonitor
+- IntradayLimitManager
+
+5) Balances & Ledger
+- BalanceService
+- AccountBalanceCalculator
+- IntradayBalanceService
+- EndOfDayBalanceProcessor
+
+Ledger
+- LedgerPostingService
+- GeneralLedgerIntegrator
+- BalanceReconciliationService
+
+6) Liquidity & Treasury
+- LiquidityManagementService
+- LiquidityPositionCalculator
+- LiquidityForecastEngine
+
+Treasury
+- CashFlowProjectionService
+- FundingRequirementCalculator
+- TreasuryLiquidityMonitor
+
+7) Cross-Cutting / Integration-Ready Components
+- PaymentOrchestrationService
+- TransactionEnrichmentService
+- RegulatoryReportingService
+- AuditTrailService
+
+Integration Adapters
+- ClearingHouseAdapter
+- SettlementNetworkGateway
+
+8) Event-Driven / Streaming (Optional but Bank-Grade)
+- PaymentEventPublisher
+- TransactionEventConsumer
+- BalanceUpdateEventHandler
+- LiquidityEventProcessor
 @end
 
 @sonarqube_rule_coverage (MANDATORY)
@@ -201,6 +330,7 @@ Code Smells & Maintainability
 @additional_static_signals (MANDATORY)
 In addition to RSPEC IDs above, flag these SonarQube-style static signals as "Non-RSPEC" when applicable:
 - Cyclic dependencies / cross-layer leakage not captured by an explicit RSPEC in this prompt
+- Reference architecture contract violations per @domain_reference_architecture_contract
 - Spark/Data risks: schema inference on read, non-deterministic ordering assumptions, costly actions in loops, unsafe UDFs
 - Test anti-patterns: assertionless tests, empty suites, brittle time-based tests
 - Security-sensitive patterns: secrets in code/config, weak masking/redaction in logs
@@ -337,7 +467,7 @@ No SonarQube rule violations detected.
 @constraints (NON-NEGOTIABLE)
 - Do NOT modify code.
 - Do NOT generate non-Scala code.
-- Do NOT suggest architecture refactors or introduce new dependencies.
+- Do NOT suggest architecture refactors or introduce new dependencies beyond aligning with the reference architecture contract (e.g., creating/renaming the required role classes when applicable).
 - Do NOT add subjective opinions.
 - Keep findings concise, technical, and audit-ready.
 @end
