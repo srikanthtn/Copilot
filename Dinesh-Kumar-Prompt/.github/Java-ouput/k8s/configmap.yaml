@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-app-config
+  namespace: payments-app
+  labels:
+    app: payments-app
+  annotations:
+    description: "Non-secret configuration for payments-app"
+data:
+  application.yml: |
+    server:
+      port: 8080
+    spring:
+      application:
+        name: payments-app
