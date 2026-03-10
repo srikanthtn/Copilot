@@ -179,43 +179,66 @@ promptml_version: "1.0"
   - Every domain event logged with correlationId (no raw PII in logs)
   - Health check endpoint: /health (Prometheus format)
 
-  ## PHASE 4 — FILE CREATION SEQUENCE (one file-creation tool call per file)
+  ## PHASE 4 — CODE OUTPUT SEQUENCE (emit full source for every file)
 
-  Create in this order:
-  | #  | File Path (relative to project root)                                   |
-  |----|------------------------------------------------------------------------|
-  |  1 | build.sbt                                                              |
-  |  2 | project/plugins.sbt                                                    |
-  |  3 | src/main/resources/application.conf                                    |
-  |  4 | src/main/scala/.../domain/model/Money.scala                            |
-  |  5 | src/main/scala/.../domain/model/AccountIdentifier.scala                |
-  |  6 | src/main/scala/.../domain/model/<PrimaryAggregate>.scala               |
-  |  7 | src/main/scala/.../domain/model/DomainErrors.scala                     |
-  |  8 | src/main/scala/.../domain/events/DomainEvents.scala                    |
-  |  9 | src/main/scala/.../domain/specifications/Specifications.scala          |
-  | 10 | src/main/scala/.../domain/services/<Domain>Validator.scala             |
-  | 11 | src/main/scala/.../domain/services/RiskScoreEngine.scala               |
-  | 12 | src/main/scala/.../application/commands/Process<Domain>Command.scala   |
-  | 13 | src/main/scala/.../application/jobs/<Domain>BatchJob.scala             |
-  | 14 | src/main/scala/.../infrastructure/spark/SparkSessionProvider.scala     |
-  | 15 | src/main/scala/.../infrastructure/spark/<Domain>Reader.scala           |
-  | 16 | src/main/scala/.../infrastructure/spark/<Domain>Writer.scala           |
-  | 17 | src/main/scala/.../infrastructure/config/AppConfig.scala               |
-  | 18 | src/main/scala/.../security/encryption/AesGcmCipher.scala             |
-  | 19 | src/main/scala/.../security/masking/PiiMasker.scala                    |
-  | 20 | src/main/scala/.../security/audit/AuditLogger.scala                    |
-  | 21 | src/main/scala/.../observability/metrics/MetricsRegistry.scala         |
-  | 22 | src/main/scala/.../Main.scala                                           |
-  | 23 | src/test/scala/.../domain/<Domain>Spec.scala                           |
-  | 24 | src/test/scala/.../domain/MoneySpec.scala                              |
-  | 25 | src/main/resources/data/<domain>.csv (100+ synthetic records)          |
-  | 26 | README.md                                                              |
-  | 27 | GENERATION_REPORT.md                                                   |
+  For EACH file below, output a fenced code block headed with a comment
+  `// FILE: bfsi-<domain>-app/<relative-path>` followed by the COMPLETE,
+  compilable source. Do NOT skip any file. Do NOT abbreviate any file.
 
-  After each file: print  ✅ Created: <path>
-  After all files: print final summary:
+  Output order and minimum line-count requirements:
+  | #  | File Path (relative to project root)                                    | Min lines |
+  |----|-------------------------------------------------------------------------|----------|
+  |  1 | build.sbt                                                               | 80       |
+  |  2 | project/plugins.sbt                                                     | 20       |
+  |  3 | src/main/resources/application.conf                                     | 60       |
+  |  4 | src/main/scala/com/bank/<domain>/domain/model/Money.scala               | 100      |
+  |  5 | src/main/scala/com/bank/<domain>/domain/model/AccountIdentifier.scala   | 100      |
+  |  6 | src/main/scala/com/bank/<domain>/domain/model/<PrimaryAggregate>.scala  | 120      |
+  |  7 | src/main/scala/com/bank/<domain>/domain/model/DomainErrors.scala        | 80       |
+  |  8 | src/main/scala/com/bank/<domain>/domain/events/DomainEvents.scala       | 100      |
+  |  9 | src/main/scala/com/bank/<domain>/domain/specifications/Specifications.scala | 120  |
+  | 10 | src/main/scala/com/bank/<domain>/domain/services/<Domain>Validator.scala | 120     |
+  | 11 | src/main/scala/com/bank/<domain>/domain/services/RiskScoreEngine.scala  | 120      |
+  | 12 | src/main/scala/com/bank/<domain>/application/commands/Process<Domain>Command.scala | 100 |
+  | 13 | src/main/scala/com/bank/<domain>/application/jobs/<Domain>BatchJob.scala | 130     |
+  | 14 | src/main/scala/com/bank/<domain>/infrastructure/spark/SparkSessionProvider.scala | 80 |
+  | 15 | src/main/scala/com/bank/<domain>/infrastructure/spark/<Domain>Reader.scala | 100   |
+  | 16 | src/main/scala/com/bank/<domain>/infrastructure/spark/<Domain>Writer.scala | 100   |
+  | 17 | src/main/scala/com/bank/<domain>/infrastructure/config/AppConfig.scala  | 80       |
+  | 18 | src/main/scala/com/bank/<domain>/security/encryption/AesGcmCipher.scala | 120     |
+  | 19 | src/main/scala/com/bank/<domain>/security/masking/PiiMasker.scala       | 100      |
+  | 20 | src/main/scala/com/bank/<domain>/security/audit/AuditLogger.scala       | 100      |
+  | 21 | src/main/scala/com/bank/<domain>/observability/metrics/MetricsRegistry.scala | 100 |
+  | 22 | src/main/scala/com/bank/<domain>/Main.scala                             | 80       |
+  | 23 | src/test/scala/com/bank/<domain>/domain/<Domain>Spec.scala              | 150      |
+  | 24 | src/test/scala/com/bank/<domain>/domain/MoneySpec.scala                 | 120      |
+  | 25 | src/main/resources/data/<domain>.csv                                    | 100 rows |
+  | 26 | README.md                                                               | 60       |
+  | 27 | GENERATION_REPORT.md                                                    | 40       |
+
+  ### Required output format per file
+  Each file MUST be emitted as:
+  ```scala
+  // FILE: bfsi-payments-app/src/main/scala/com/bank/payments/domain/model/Money.scala
+  package com.bank.payments.domain.model
+
+  import java.math.{BigDecimal => JBigDecimal, MathContext, RoundingMode}
+  // ... full compilable Scala source follows (100+ real lines) ...
   ```
-  ✅ GENERATION COMPLETE — 27 files created in bfsi-<domain>-app/
+
+  ### Inline code quality gates (checked per file before emitting)
+  - Zero `var` keywords
+  - Zero `null` literals
+  - Zero `throw` expressions
+  - Zero `Double` or `Float` for monetary values
+  - All IBAN/PAN references pass through PiiMasker before any log call
+  - All timestamps use `java.time.Instant`
+  - Every public method has a Scaladoc comment
+
+  After each file print: ✅ Emitted: <path> (<actual-line-count> lines)
+  After all 27 files print:
+  ```
+  ✅ GENERATION COMPLETE — 27 files emitted for bfsi-<domain>-app/
      Run : cd bfsi-<domain>-app && sbt run
      Test: sbt test
      JAR : sbt assembly
@@ -260,12 +283,21 @@ promptml_version: "1.0"
 <!-- CO-STAR: RESPONSE                                                      -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <response>
-  Output type  : FILE CREATION TOOL CALLS — one call per file
-  Forbidden    : Fenced code blocks with full file content in chat response
+  Output type  : COMPLETE SCALA SOURCE CODE — emit full compilable file content
+  Required     : Every file rendered as a fenced code block with file path header
+  Required     : Minimum 100 lines of real, compilable Scala per source file
+  Forbidden    : Placeholder comments such as "// TODO", "// left as exercise"
+  Forbidden    : Stub implementations — every method must have a body
   Forbidden    : Asking questions or seeking confirmation between files
-  Forbidden    : Single mega .md file containing all code
+  Forbidden    : Summarising what a file "would" contain instead of writing it
   Files        : 27 per project
-  Project root : <workspace_root>/bfsi-<domain>-app/
+  Project root : bfsi-<domain>-app/ (relative to workspace root)
+
+  Format per file:
+  ```
+  // FILE: bfsi-<domain>-app/<relative-path>
+  <full compilable Scala / sbt / HOCON / CSV source>
+  ```
 
   Zero-input behaviour (invoked with no domain specified):
   - Default domain: payments / SEPA
