@@ -1,5 +1,6 @@
 ---
 name: BFSI Unified Spark/Scala Architect — Self-Refinement Edition
+author: Sujan Sreenivasulu
 version: 1.0.0
 description: >
   Autonomous BFSI code-generation architect powered by Self-Refinement Prompting.
